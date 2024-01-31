@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Posenet Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+</head>
+<body>
+     <p>
+         이 이미지에 대해 포즈넷(Posenet)이 호출된다. 스크립트를 보려면 이 페이지의 소스를 보라.
+     </p>
+     <p>
+         <b>참고: </b> 시작되지 않으면 ‘검사’를 클릭하고 콘솔을 보자.
+         검사 모드에서 톱니바퀴 모양 아이콘을 클릭하고,
+         <ol>
+         <li> 자바스크립트 소스 맵 사용 설정을 해제</li>
+         <li> CSS 소스 맵 사용 설정을 해제</li>
+         </ol>
+     </p>
+     <img id='input_img' src="11b_bowling.jpg" height="498" width="818" />
+     <h3>출력 캔버스</h3>
+     <canvas id="output_canvas" height="498" width="818"></canvas>
+     <h3>JSON</h3>
+     <p id="output_json"> Posenet을 기다리는 중 ... </p>
+</body>
+<script>
+    var imageElement = document.getElementById('input_img');
+    var canvas = document.getElementById("output_canvas");
+    var context = canvas.getContext("2d");
+    context.drawImage(imageElement, 0, 0);
+
+    posenet.load().then(function(net) {
+      const pose = net.estimateSinglePose(imageElement, {
+        flipHorizontal: false
+      });
+      return pose;
+    }).then(function(pose){
+      console.log(pose);
+      document.getElementById('output_json').innerHTML = "<pre>" + JSON.stringify(pose, null, 2) + "</pre>";
+      for (var i = 0; i < pose.keypoints.length; i++) {
+        var markerText = pose.keypoints[i].part;
+        var markerX = pose.keypoints[i].position.x;
+        var markerY = pose.keypoints[i].position.y;
+
+        // Background box for text
+        var textMeasurements = context.measureText(markerText);
+        context.fillStyle = "#666";
+        context.globalAlpha = 0.7;
+        context.fillRect(markerX - (textMeasurements.width / 2), markerY - 15, textMeasurements.width, 20);
+        context.globalAlpha = 1;
+
+        // Text 
+        context.fillStyle = "#000";
+        context.fillText(markerText, markerX, markerY);
+      }
+    })
+</script>
+</html>
